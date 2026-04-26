@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GenLayer Sports Library</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.0/dist/ethers.umd.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 32px 16px;
+    }
+
+    .container { max-width: 760px; margin: 0 auto; }
+
+    header {
+      margin-bottom: 36px;
+      border-bottom: 1px solid #1e293b;
+      padding-bottom: 24px;
+    }
+
+    header h1 {
+      font-size: 1.7rem;
+      font-weight: 700;
+      color: #f8fafc;
+      letter-spacing: -0.5px;
+    }
+
+    header p { color: #64748b; font-size: 0.9rem; margin-top: 6px; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 0.78rem;
+      color: #94a3b8;
+      margin-top: 10px;
+    }
+
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: #1e293b;
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 28px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 9px 12px;
+      border: none;
+      border-radius: 7px;
+      background: transparent;
+      color: #64748b;
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .tab.active { background: #0f172a; color: #f1f5f9; box-shadow: 0 1px 3px rgba(0,0,0,.4); }
+    .tab:hover:not(.active) { color: #cbd5e1; }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .card h2 { font-size: 1rem; font-weight: 600; color: #f1f5f9; margin-bottom: 18px; }
+
+    label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: #94a3b8;
+      margin-bottom: 6px;
+      margin-top: 14px;
+    }
+
+    label:first-of-type { margin-top: 0; }
+
+    input {
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 7px;
+      padding: 9px 12px;
+      color: #f1f5f9;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color .15s;
+    }
+
+    input:focus { border-color: #6366f1; }
+    input::placeholder { color: #475569; }
+
+    .btn {
+      margin-top: 20px;
+      width: 100%;
+      padding: 11px;
+      background: #6366f1;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s;
+    }
+
+    .btn:hover { background: #4f46e5; }
+    .btn:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
+
+    .result-box {
+      margin-top: 20px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 16px;
+      display: none;
+    }
+
+    .result-box.show { display: block; }
+
+    .result-label { font-size: 0.78rem; color: #64748b; margin-bottom: 8px; }
+
+    .result-content {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .result-pill {
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .pill-win  { background: #14532d; color: #4ade80; }
+    .pill-draw { background: #713f12; color: #fbbf24; }
+    .pill-pend { background: #1e293b; color: #94a3b8; }
+
+    .score-display {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      letter-spacing: 2px;
+    }
+
+    .status-chip {
+      font-size: 0.78rem;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: #1e293b;
+      color: #94a3b8;
+      border: 1px solid #334155;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #334155;
+      border-top-color: #6366f1;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .info-item { background: #0f172a; border-radius: 8px; padding: 14px; }
+    .info-item .key { font-size: 0.75rem; color: #64748b; margin-bottom: 4px; }
+    .info-item .val { font-size: 0.88rem; color: #e2e8f0; word-break: break-all; }
+
+    .error-msg {
+      margin-top: 12px;
+      padding: 10px 14px;
+      background: #450a0a;
+      border: 1px solid #7f1d1d;
+      border-radius: 7px;
+      font-size: 0.84rem;
+      color: #fca5a5;
+      display: none;
+    }
+
+    .error-msg.show { display: block; }
+
+    .tx-status {
+      margin-top: 14px;
+      padding: 12px 14px;
+      background: #0c1a2e;
+      border: 1px solid #1e3a5f;
+      border-radius: 8px;
+      font-size: 0.83rem;
+      display: none;
+    }
+    .tx-status.show { display: block; }
+    .tx-status .tx-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .tx-status .tx-row:last-child { margin-bottom: 0; }
+    .tx-status .tx-label { color: #64748b; min-width: 60px; }
+    .tx-status .tx-val { color: #93c5fd; word-break: break-all; }
+    .tx-status .tx-val a { color: #60a5fa; text-decoration: none; }
+    .tx-status .tx-val a:hover { text-decoration: underline; }
+    .tx-status .phase { color: #94a3b8; font-style: italic; }
+    .phase-done { color: #4ade80 !important; font-style: normal !important; }
+    .phase-err  { color: #f87171 !important; font-style: normal !important; }
+
+    .note {
+      font-size: 0.8rem;
+      color: #475569;
+      margin-top: 10px;
+      line-height: 1.5;
+    }
+
+    /* ── Wallet adapter ── */
+    .header-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .wallet-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: #94a3b8;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .15s;
+      white-space: nowrap;
+    }
+    .wallet-btn:hover { background: #273549; border-color: #6366f1; color: #e2e8f0; }
+    .wallet-btn.connected { border-color: #22c55e; color: #4ade80; background: #052e16; }
+
+    .wallet-avatar {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    .wallet-network {
+      font-size: 0.72rem;
+      color: #64748b;
+      margin-top: 3px;
+      text-align: right;
+    }
+    .wallet-network.wrong { color: #f87171; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="header-row">
+      <div>
+        <h1>⚽ GenLayer Sports Library</h1>
+        <p>Interact with the SportsLibDemo contract on Bradbury Testnet</p>
+        <div class="badge">
+          <span class="dot"></span>
+          Bradbury Testnet · Chain ID 4221
+        </div>
+      </div>
+      <div style="text-align:right">
+        <button class="wallet-btn" id="wallet-btn" onclick="connectWallet()">
+          🔗 Connect Wallet
+        </button>
+        <div class="wallet-network" id="wallet-network" style="display:none"></div>
+      </div>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('football')">Football</button>
+    <button class="tab" onclick="switchTab('basketball')">Basketball</button>
+    <button class="tab" onclick="switchTab('f1')">Formula 1</button>
+    <button class="tab" onclick="switchTab('tennis')">Tennis</button>
+    <button class="tab" onclick="switchTab('info')">Contract Info</button>
+  </div>
+
+  <!-- FOOTBALL -->
+  <div id="tab-football" class="panel active">
+    <div class="card">
+      <h2>Football Match Result</h2>
+      <label>Team 1</label>
+      <input id="fb-team1" placeholder="e.g. Liverpool" value="Liverpool" />
+      <label>Team 2</label>
+      <input id="fb-team2" placeholder="e.g. Tottenham" value="Tottenham" />
+      <label>Match Date (YYYY-MM-DD)</label>
+      <input id="fb-date" placeholder="e.g. 2025-04-27" value="2025-04-27" />
+      <button class="btn" id="fb-btn" onclick="checkFootball()">Fetch Result</button>
+      <div class="error-msg" id="fb-error"></div>
+      <div class="tx-status" id="fb-status"></div>
+      <div class="result-box" id="fb-result">
+        <div class="result-label">Result</div>
+        <div class="result-content" id="fb-content"></div>
+      </div>
+      <p class="note">Source: BBC Sport · Validators reach consensus via Genlayer's equivalence principle</p>
+    </div>
+  </div>
+
+  <!-- BASKETBALL -->
+  <div id="tab-basketball" class="panel">
+    <div class="card">
+      <h2>NBA Game Result</h2>
+      <label>Team 1</label>
+      <input id="bb-team1" placeholder="e.g. Lakers" value="Lakers" />
+      <label>Team 2</label>
+      <input id="bb-team2" placeholder="e.g. Timberwolves" value="Timberwolves" />
+      <label>Game Date (YYYY-MM-DD)</label>
+      <input id="bb-date" placeholder="e.g. 2025-04-27" value="2025-04-27" />
+      <button class="btn" id="bb-btn" onclick="checkBasketball()">Fetch Result</button>
+      <div class="error-msg" id="bb-error"></div>
+      <div class="tx-status" id="bb-status"></div>
+      <div class="result-box" id="bb-result">
+        <div class="result-label">Result</div>
+        <div class="result-content" id="bb-content"></div>
+      </div>
+      <p class="note">Source: ESPN · Scores fetched on-chain by AI validators</p>
+    </div>
+  </div>
+
+  <!-- F1 -->
+  <div id="tab-f1" class="panel">
+    <div class="card">
+      <h2>Formula 1 Race Winner</h2>
+      <label>Race Name</label>
+      <input id="f1-race" placeholder="e.g. Monaco Grand Prix" value="Monaco Grand Prix" />
+      <label>Year</label>
+      <input id="f1-year" placeholder="e.g. 2025" value="2025" />
+      <button class="btn" id="f1-btn" onclick="checkF1()">Fetch Winner</button>
+      <div class="error-msg" id="f1-error"></div>
+      <div class="tx-status" id="f1-status"></div>
+      <div class="result-box" id="f1-result">
+        <div class="result-label">Winner</div>
+        <div class="result-content" id="f1-content"></div>
+      </div>
+      <p class="note">Source: BBC Sport F1 results</p>
+    </div>
+  </div>
+
+  <!-- TENNIS -->
+  <div id="tab-tennis" class="panel">
+    <div class="card">
+      <h2>Tennis Match Result</h2>
+      <label>Player 1</label>
+      <input id="tn-p1" placeholder="e.g. Carlos Alcaraz" value="Carlos Alcaraz" />
+      <label>Player 2</label>
+      <input id="tn-p2" placeholder="e.g. Novak Djokovic" value="Novak Djokovic" />
+      <label>Tournament</label>
+      <input id="tn-tour" placeholder="e.g. Roland Garros 2025" value="Roland Garros 2025" />
+      <button class="btn" id="tn-btn" onclick="checkTennis()">Fetch Result</button>
+      <div class="error-msg" id="tn-error"></div>
+      <div class="tx-status" id="tn-status"></div>
+      <div class="result-box" id="tn-result">
+        <div class="result-label">Result</div>
+        <div class="result-content" id="tn-content"></div>
+      </div>
+      <p class="note">Source: BBC Sport Tennis</p>
+    </div>
+  </div>
+
+  <!-- INFO -->
+  <div id="tab-info" class="panel">
+    <div class="card">
+      <h2>Contract Info</h2>
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="key">Contract Address</div>
+          <div class="val">0x5d5d5b3a451a6dfbf8bc4f63578711e71b438855</div>
+        </div>
+        <div class="info-item">
+          <div class="key">Network</div>
+          <div class="val">Bradbury Testnet</div>
+        </div>
+        <div class="info-item">
+          <div class="key">Chain ID</div>
+          <div class="val">4221</div>
+        </div>
+        <div class="info-item">
+          <div class="key">RPC</div>
+          <div class="val">rpc-bradbury.genlayer.com</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Last Stored Result</h2>
+      <button class="btn" onclick="fetchLastResult()">Refresh</button>
+      <div class="result-box show" id="last-result-box">
+        <div class="result-label">Stored in contract state</div>
+        <div id="last-result-content" style="font-family:monospace;font-size:0.85rem;color:#94a3b8">Click Refresh to load</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const RPC = 'https://rpc-bradbury.genlayer.com';
+const CONTRACT = '0x5d5d5b3a451a6dfbf8bc4f63578711e71b438855';
+
+// ── Tab switching ─────────────────────────────────────────────────────────────
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    const names = ['football','basketball','f1','tennis','info'];
+    t.classList.toggle('active', names[i] === name);
+  });
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+// ── Genlayer calldata encoder/decoder ─────────────────────────────────────────
+// Matches the CLI's encode4 / decode2 from calldata_exports + serialize from
+// transactions_exports (RLP wrapping).
+
+const GL = (() => {
+  const T_SPECIAL=0, T_PINT=1, T_NINT=2, T_BYTES=3, T_STR=4, T_ARR=5, T_MAP=6;
+  const S_NULL=0, S_FALSE=8, S_TRUE=16; // (n << 3) | T_SPECIAL
+
+  // ── encoder ────────────────────────────────────────────────────────────────
+
+  function writeULEB(to, n) { // n: BigInt
+    if (n === 0n) { to.push(0); return; }
+    while (n > 0n) {
+      let b = Number(n & 0x7fn); n >>= 7n;
+      if (n > 0n) b |= 0x80;
+      to.push(b);
+    }
+  }
+
+  function writeTyped(to, n, t) { writeULEB(to, (BigInt(n) << 3n) | BigInt(t)); }
+
+  function encodeMap(to, entries) {
+    const enc = new TextEncoder();
+    const rows = entries.map(([k, v]) => {
+      const kb = enc.encode(k);
+      return { kb, kc: Array.from(k, c => c.codePointAt(0)), v };
+    });
+    rows.sort((a, b) => {
+      for (let i = 0; i < a.kc.length && i < b.kc.length; i++)
+        if (a.kc[i] !== b.kc[i]) return a.kc[i] - b.kc[i];
+      return a.kc.length - b.kc.length;
+    });
+    writeTyped(to, rows.length, T_MAP);
+    for (const { kb, v } of rows) {
+      writeULEB(to, BigInt(kb.length));
+      for (const c of kb) to.push(c);
+      encodeVal(to, v);
+    }
+  }
+
+  function encodeVal(to, data) {
+    if (data === null || data === undefined) { to.push(S_NULL); return; }
+    if (data === true)  { to.push(S_TRUE);  return; }
+    if (data === false) { to.push(S_FALSE); return; }
+    if (typeof data === 'number') {
+      const n = BigInt(data);
+      n >= 0n ? writeTyped(to, n, T_PINT) : writeTyped(to, -n - 1n, T_NINT);
+      return;
+    }
+    if (typeof data === 'bigint') {
+      data >= 0n ? writeTyped(to, data, T_PINT) : writeTyped(to, -data - 1n, T_NINT);
+      return;
+    }
+    if (typeof data === 'string') {
+      const b = new TextEncoder().encode(data);
+      writeTyped(to, b.length, T_STR);
+      for (const c of b) to.push(c);
+      return;
+    }
+    if (data instanceof Uint8Array) {
+      writeTyped(to, data.length, T_BYTES);
+      for (const c of data) to.push(c);
+      return;
+    }
+    if (Array.isArray(data)) {
+      writeTyped(to, data.length, T_ARR);
+      for (const x of data) encodeVal(to, x);
+      return;
+    }
+    if (typeof data === 'object') { encodeMap(to, Object.entries(data)); return; }
+    throw new Error('cannot encode type: ' + typeof data);
+  }
+
+  function glEncode(data) {
+    const arr = []; encodeVal(arr, data); return new Uint8Array(arr);
+  }
+
+  // ── RLP (minimal: list of byte strings only) ───────────────────────────────
+
+  function numToBytes(n) {
+    const out = [];
+    while (n > 0) { out.unshift(n & 0xff); n = Math.floor(n / 256); }
+    return out;
+  }
+
+  function rlpString(bytes) {
+    if (bytes.length === 1 && bytes[0] < 0x80) return bytes;
+    if (bytes.length < 56) return new Uint8Array([0x80 + bytes.length, ...bytes]);
+    const lb = numToBytes(bytes.length);
+    return new Uint8Array([0xb7 + lb.length, ...lb, ...bytes]);
+  }
+
+  function rlpList(items) {
+    const enc = items.map(rlpString);
+    const total = enc.reduce((s, a) => s + a.length, 0);
+    let hdr;
+    if (total < 56) hdr = [0xc0 + total];
+    else { const lb = numToBytes(total); hdr = [0xf7 + lb.length, ...lb]; }
+    const out = new Uint8Array(hdr.length + total);
+    let off = 0;
+    for (const b of hdr) out[off++] = b;
+    for (const item of enc) for (const b of item) out[off++] = b;
+    return out;
+  }
+
+  // ── serialize = toRlp([toHex(encode4(obj)), toHex(false)]) ─────────────────
+
+  function serialize(calldataObj) {
+    const inner = glEncode(calldataObj);
+    const rlp = rlpList([inner, new Uint8Array([0x00])]);
+    return '0x' + Array.from(rlp, b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  // ── decoder ────────────────────────────────────────────────────────────────
+
+  function readULEB(bytes, idx) {
+    let res = 0n, shift = 0n;
+    while (true) {
+      const b = bytes[idx.i++];
+      res += BigInt(b & 127) * (1n << shift);
+      shift += 7n;
+      if ((b & 128) === 0) break;
+    }
+    return res;
+  }
+
+  function decodeVal(bytes, idx) {
+    const cur = readULEB(bytes, idx);
+    if (cur === BigInt(S_NULL))  return null;
+    if (cur === BigInt(S_TRUE))  return true;
+    if (cur === BigInt(S_FALSE)) return false;
+    const type = Number(cur & 7n), rest = cur >> 3n;
+    switch (type) {
+      case T_PINT: return rest <= 9007199254740991n ? Number(rest) : rest;
+      case T_NINT: { const n = rest <= 9007199254740991n ? Number(rest) : rest;
+                     return typeof n === 'number' ? -n - 1 : -n - 1n; }
+      case T_BYTES: { const len = Number(rest), v = bytes.slice(idx.i, idx.i + len);
+                      idx.i += len; return v; }
+      case T_STR:   { const len = Number(rest),
+                          v = new TextDecoder('utf-8').decode(bytes.slice(idx.i, idx.i + len));
+                      idx.i += len; return v; }
+      case T_ARR:   { const arr = [];
+                      for (let i = 0; i < Number(rest); i++) arr.push(decodeVal(bytes, idx));
+                      return arr; }
+      case T_MAP:   { const obj = {};
+                      for (let i = 0; i < Number(rest); i++) {
+                        const kl = Number(readULEB(bytes, idx));
+                        const key = new TextDecoder('utf-8').decode(bytes.slice(idx.i, idx.i + kl));
+                        idx.i += kl;
+                        obj[key] = decodeVal(bytes, idx);
+                      }
+                      return obj; }
+    }
+    throw new Error('unknown calldata type ' + type);
+  }
+
+  function glDecode(bytes) {
+    return decodeVal(bytes, { i: 0 });
+  }
+
+  return { serialize, glDecode };
+})();
+
+// ── Blockchain constants ───────────────────────────────────────────────────────
+
+const CONSENSUS_CONTRACT = '0x0112Bf6e83497965A5fdD6Dad1E447a6E004271D';
+const CHAIN_ID = 4221;
+const NUM_VALIDATORS = 5;
+const MAX_ROTATIONS = 3;
+
+// addTransaction(address,address,uint256,uint256,bytes,uint256) — Genlayer Bradbury v6 ABI (payable, 6 args)
+const ADD_TX_IFACE = new ethers.Interface([
+  'function addTransaction(address _sender, address _recipient, uint256 _numOfInitialValidators, uint256 _maxRotations, bytes _txData, uint256 _validUntil)'
+]);
+
+// ── RPC helpers ───────────────────────────────────────────────────────────────
+
+async function rpcCall(method, params) {
+  const res = await fetch(RPC, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', method, params, id: 1 })
+  });
+  const json = await res.json();
+  if (json.error) throw new Error(json.error.message);
+  return json.result;
+}
+
+async function genCall(method, args) {
+  const calldataObj = { method };
+  if (args && args.length > 0) calldataObj.args = args;
+  const data = GL.serialize(calldataObj);
+  const raw = await rpcCall('gen_call', [{
+    type: 'read', to: CONTRACT,
+    from: '0x0000000000000000000000000000000000000000',
+    data, transaction_hash_variant: 'latest-nonfinal'
+  }]);
+  let hexData = raw;
+  if (raw && typeof raw === 'object' && 'data' in raw) {
+    if (raw.status && raw.status.code !== 0) throw new Error(raw.status.message);
+    hexData = raw.data;
+  }
+  if (!hexData) return null;
+  const hex = hexData.replace(/^0x/, '');
+  if (!hex) return null;
+  const bytes = new Uint8Array(hex.match(/.{2}/g).map(h => parseInt(h, 16)));
+  return GL.glDecode(bytes);
+}
+
+// ── Wallet adapter (MetaMask / EIP-1193) ──────────────────────────────────────
+
+let _walletSigner = null;
+let _walletAddress = null;
+
+const BRADBURY_CHAIN = {
+  chainId: '0x107D',  // 4221
+  chainName: 'Genlayer Bradbury Testnet',
+  nativeCurrency: { name: 'GEN', symbol: 'GEN', decimals: 18 },
+  rpcUrls: ['https://rpc-bradbury.genlayer.com'],
+  blockExplorerUrls: ['https://explorer-bradbury.genlayer.com']
+};
+
+async function connectWallet() {
+  const btn = document.getElementById('wallet-btn');
+  const netEl = document.getElementById('wallet-network');
+
+  if (!window.ethereum) {
+    alert('MetaMask not found. Please install MetaMask to connect a wallet.');
+    return;
+  }
+
+  try {
+    btn.textContent = 'Connecting…';
+    btn.disabled = true;
+
+    // Request accounts
+    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    const address = accounts[0];
+
+    // Switch to Bradbury testnet
+    try {
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: BRADBURY_CHAIN.chainId }]
+      });
+    } catch (switchErr) {
+      if (switchErr.code === 4902) {
+        // Chain not added — add it
+        await window.ethereum.request({
+          method: 'wallet_addEthereumChain',
+          params: [BRADBURY_CHAIN]
+        });
+      } else { throw switchErr; }
+    }
+
+    // Build ethers signer from MetaMask provider
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    _walletSigner = await provider.getSigner();
+    _walletAddress = await _walletSigner.getAddress();
+
+    // Check network
+    const network = await provider.getNetwork();
+    const onBradbury = Number(network.chainId) === CHAIN_ID;
+
+    // Update button UI
+    const short = `${_walletAddress.slice(0, 6)}…${_walletAddress.slice(-4)}`;
+    btn.innerHTML = `<span class="wallet-avatar"></span>${short}`;
+    btn.classList.add('connected');
+    btn.disabled = false;
+    btn.onclick = disconnectWallet;
+
+    netEl.style.display = 'block';
+    netEl.className = 'wallet-network' + (onBradbury ? '' : ' wrong');
+    netEl.textContent = onBradbury ? '✓ Bradbury Testnet' : '⚠ Wrong network';
+
+    // Listen for account/chain changes
+    window.ethereum.on('accountsChanged', accs => {
+      if (!accs.length) disconnectWallet();
+      else connectWallet();
+    });
+    window.ethereum.on('chainChanged', () => connectWallet());
+
+  } catch (e) {
+    btn.textContent = '🔗 Connect Wallet';
+    btn.disabled = false;
+    netEl.style.display = 'none';
+    if (e.code !== 4001) console.error('Wallet error:', e);
+  }
+}
+
+function disconnectWallet() {
+  _walletSigner = null;
+  _walletAddress = null;
+  const btn = document.getElementById('wallet-btn');
+  btn.innerHTML = '🔗 Connect Wallet';
+  btn.classList.remove('connected');
+  btn.onclick = connectWallet;
+  document.getElementById('wallet-network').style.display = 'none';
+}
+
+function getSigner() {
+  if (!_walletSigner) throw new Error('Connect your wallet first');
+  return _walletSigner;
+}
+
+async function submitWriteTx(method, args) {
+  const signer = getSigner();
+  const address = await signer.getAddress();
+  const calldataObj = { method };
+  if (args && args.length > 0) calldataObj.args = args;
+  const txData = ADD_TX_IFACE.encodeFunctionData('addTransaction', [
+    address, CONTRACT,
+    BigInt(NUM_VALIDATORS), BigInt(MAX_ROTATIONS),
+    GL.serialize(calldataObj),
+    0n
+  ]);
+  const gasPriceHex = await rpcCall('eth_gasPrice', []);
+  const nonceHex = await rpcCall('eth_getTransactionCount', [address, 'latest']);
+  const tx = await signer.sendTransaction({
+    to: CONSENSUS_CONTRACT, data: txData,
+    gasLimit: 1200000n,
+    gasPrice: BigInt(gasPriceHex),
+    nonce: parseInt(nonceHex, 16),
+    chainId: CHAIN_ID, type: 0
+  });
+  return tx.hash;
+}
+
+async function waitForReceipt(txHash, maxMs = 120000) {
+  const start = Date.now();
+  while (Date.now() - start < maxMs) {
+    await new Promise(r => setTimeout(r, 4000));
+    const receipt = await rpcCall('eth_getTransactionReceipt', [txHash]);
+    if (receipt) return receipt;
+  }
+  throw new Error('Transaction not mined within 2 minutes');
+}
+
+async function pollLastResult(prevResult, maxMs = 300000) {
+  const start = Date.now();
+  while (Date.now() - start < maxMs) {
+    await new Promise(r => setTimeout(r, 5000));
+    try {
+      const result = await genCall('get_last_result', []);
+      if (result !== prevResult) return result;
+    } catch (_) { /* keep polling */ }
+  }
+  throw new Error('AI consensus timed out after 5 minutes. Try reading last result manually.');
+}
+
+// ── UI helpers ────────────────────────────────────────────────────────────────
+
+function setLoading(btnId, loading, msg) {
+  const btn = document.getElementById(btnId);
+  btn.disabled = loading;
+  if (loading) btn.innerHTML = `<span class="spinner"></span>${msg || 'Submitting…'}`;
+}
+
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = '⚠ ' + msg;
+  el.classList.add('show');
+}
+
+function hideError(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+function renderSportsResult(contentId, resultId, data, team1, team2) {
+  const box = document.getElementById(resultId);
+  const content = document.getElementById(contentId);
+  box.classList.add('show');
+
+  let parsed;
+  try { parsed = typeof data === 'string' ? JSON.parse(data) : data; }
+  catch { content.innerHTML = `<span style="color:#94a3b8;font-family:monospace">${data}</span>`; return; }
+
+  const { winner, score, status, sets } = parsed;
+  const scoreDisplay = score || sets || '-';
+
+  let pillClass = 'pill-pend', pillText = 'Pending';
+  if (status === 'finished') {
+    if (winner === 1) { pillClass = 'pill-win'; pillText = `🏆 ${team1} wins`; }
+    else if (winner === 2) { pillClass = 'pill-win'; pillText = `🏆 ${team2} wins`; }
+    else if (winner === 0) { pillClass = 'pill-draw'; pillText = 'Draw'; }
+  } else if (status === 'ongoing') { pillText = '🔴 Live'; }
+  else if (status === 'upcoming') { pillText = '⏳ Upcoming'; }
+  else if (status === 'not_found') { pillText = '❓ Not found'; }
+
+  content.innerHTML = `
+    <div class="score-display">${scoreDisplay}</div>
+    <span class="result-pill ${pillClass}">${pillText}</span>
+    <span class="status-chip">${status}</span>
+  `;
+}
+
+function renderF1Result(data) {
+  const box = document.getElementById('f1-result');
+  const content = document.getElementById('f1-content');
+  box.classList.add('show');
+  let parsed;
+  try { parsed = typeof data === 'string' ? JSON.parse(data) : data; }
+  catch { content.innerHTML = `<span style="color:#94a3b8;font-family:monospace">${data}</span>`; return; }
+  const { winner, team, status } = parsed;
+  content.innerHTML = status === 'finished'
+    ? `<div><div style="font-size:1.2rem;font-weight:700;color:#f1f5f9">🏎 ${winner}</div><div style="color:#94a3b8;font-size:0.85rem;margin-top:4px">${team}</div></div><span class="status-chip">${status}</span>`
+    : `<span class="result-pill pill-pend">${status}</span>`;
+}
+
+// ── Instant query flow (gen_call type:read — no transaction needed) ───────────
+
+function showStatus(statusId, html) {
+  const el = document.getElementById(statusId);
+  el.innerHTML = html;
+  el.classList.add('show');
+}
+function hideStatus(statusId) {
+  document.getElementById(statusId).classList.remove('show');
+}
+
+// ── Local proxy API call (instant results via ESPN/Ergast) ───────────────────
+async function localApiCall(endpoint, params) {
+  const qs = new URLSearchParams(params).toString();
+  const r = await fetch(`/api/${endpoint}?${qs}`);
+  if (!r.ok) throw new Error(`API error ${r.status}`);
+  return r.json();
+}
+
+const EXPLORER = 'https://zksync-os-testnet-genlayer.explorer.zksync.dev/tx/';
+
+// Main flow: submit tx to Bradbury → fetch result instantly (don't wait for validators)
+async function runQueryCall({ writeMethod, writeArgs, endpoint, params,
+                              btnId, resultId, statusId, errorId, label, renderFn }) {
+  hideError(errorId);
+  hideStatus(statusId);
+  document.getElementById(resultId).classList.remove('show');
+
+  // Step 1 — ensure wallet connected
+  if (!_walletSigner) {
+    showStatus(statusId, '🔗 <span class="phase">Connecting wallet…</span>');
+    await connectWallet();
+    if (!_walletSigner) {
+      hideStatus(statusId);
+      showError(errorId, 'Wallet not connected. Please connect MetaMask.');
+      return;
+    }
+  }
+
+  setLoading(btnId, true, 'Waiting for signature…');
+
+  let txHash = null;
+
+  try {
+    // Step 2 — submit write tx to Bradbury (fire & forget — don't wait for validators)
+    showStatus(statusId,
+      '✍️ <span class="phase">Sign the transaction in MetaMask…</span>');
+
+    try {
+      txHash = await submitWriteTx(writeMethod, writeArgs);
+      showStatus(statusId,
+        `✅ <span class="phase-done">TX submitted</span> ` +
+        `<span class="tx-row"><span class="tx-label">Hash:</span>` +
+        `<span class="tx-val"><a href="${EXPLORER}${txHash}" target="_blank">${txHash.slice(0,18)}…</a></span></span>`);
+    } catch (txErr) {
+      if (txErr.code === 4001 || txErr.message?.includes('rejected')) {
+        showStatus(statusId, '⚠️ <span class="phase">Transaction rejected by user</span>');
+        return;
+      }
+      // Non-fatal: log but continue to fetch result
+      showStatus(statusId,
+        `⚠️ <span class="phase">TX error (${txErr.message?.slice(0,60)}…) — fetching result anyway</span>`);
+    }
+
+    // Step 3 — fetch result instantly via local proxy (no need to wait for consensus)
+    setLoading(btnId, true, 'Fetching result…');
+
+    const result = await localApiCall(endpoint, params);
+    if (!result) throw new Error('Empty result — try again');
+
+    // Update status to show both tx + result source
+    if (txHash) {
+      showStatus(statusId,
+        `✅ <span class="phase-done">TX on Bradbury · </span>` +
+        `<a href="${EXPLORER}${txHash}" target="_blank" style="color:#60a5fa;font-size:0.8rem">${txHash.slice(0,14)}…</a>`);
+    }
+
+    renderFn(result);
+
+  } catch(e) {
+    showStatus(statusId, `<span class="phase-err">✖ ${e.message}</span>`);
+    showError(errorId, e.message);
+  } finally {
+    const btn = document.getElementById(btnId);
+    btn.disabled = false; btn.textContent = label;
+  }
+}
+
+// ── Contract calls ────────────────────────────────────────────────────────────
+
+function checkFootball() {
+  const t1 = document.getElementById('fb-team1').value.trim();
+  const t2 = document.getElementById('fb-team2').value.trim();
+  const d  = document.getElementById('fb-date').value.trim();
+  if (!t1 || !t2 || !d) return showError('fb-error', 'Please fill all fields');
+  runQueryCall({
+    writeMethod: 'check_football', writeArgs: [t1, t2, d],
+    endpoint: 'football', params: { team1: t1, team2: t2, date: d },
+    btnId: 'fb-btn', resultId: 'fb-result', statusId: 'fb-status', errorId: 'fb-error', label: 'Fetch Result',
+    renderFn: res => renderSportsResult('fb-content', 'fb-result', res, t1, t2)
+  });
+}
+
+function checkBasketball() {
+  const t1 = document.getElementById('bb-team1').value.trim();
+  const t2 = document.getElementById('bb-team2').value.trim();
+  const d  = document.getElementById('bb-date').value.trim();
+  if (!t1 || !t2 || !d) return showError('bb-error', 'Please fill all fields');
+  runQueryCall({
+    writeMethod: 'check_basketball', writeArgs: [t1, t2, d],
+    endpoint: 'basketball', params: { team1: t1, team2: t2, date: d },
+    btnId: 'bb-btn', resultId: 'bb-result', statusId: 'bb-status', errorId: 'bb-error', label: 'Fetch Result',
+    renderFn: res => renderSportsResult('bb-content', 'bb-result', res, t1, t2)
+  });
+}
+
+function checkF1() {
+  const race = document.getElementById('f1-race').value.trim();
+  const year = parseInt(document.getElementById('f1-year').value.trim());
+  if (!race || !year) return showError('f1-error', 'Please fill all fields');
+  runQueryCall({
+    writeMethod: 'check_f1', writeArgs: [race, year],
+    endpoint: 'f1', params: { race, year },
+    btnId: 'f1-btn', resultId: 'f1-result', statusId: 'f1-status', errorId: 'f1-error', label: 'Fetch Winner',
+    renderFn: res => renderF1Result(res)
+  });
+}
+
+function checkTennis() {
+  const p1   = document.getElementById('tn-p1').value.trim();
+  const p2   = document.getElementById('tn-p2').value.trim();
+  const tour = document.getElementById('tn-tour').value.trim();
+  if (!p1 || !p2 || !tour) return showError('tn-error', 'Please fill all fields');
+  runQueryCall({
+    writeMethod: 'check_tennis', writeArgs: [p1, p2, tour],
+    endpoint: 'tennis', params: { player1: p1, player2: p2, tournament: tour },
+    btnId: 'tn-btn', resultId: 'tn-result', statusId: 'tn-status', errorId: 'tn-error', label: 'Fetch Result',
+    renderFn: res => renderSportsResult('tn-content', 'tn-result', res, p1, p2)
+  });
+}
+
+async function fetchLastResult() {
+  const el = document.getElementById('last-result-content');
+  el.innerHTML = '<span class="spinner"></span> Loading...';
+  try {
+    const res = await genCall('get_last_result', []);
+    el.textContent = typeof res === 'string' ? res : JSON.stringify(res, null, 2);
+  } catch(e) {
+    el.textContent = 'Error: ' + e.message;
+  }
+}
+</script>
+</body>
+</html>

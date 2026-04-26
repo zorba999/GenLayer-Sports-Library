@@ -1,0 +1,17 @@
+# Private keys / keystores — NEVER commit
+tmp_key.json
+*.key
+*.pem
+*.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Node
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
