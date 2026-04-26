@@ -202,50 +202,64 @@ const LiveDemo = () => {
   const short = (addr: string) => `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 
   return (
-    <section id="demo" className="border-y border-border/60 bg-surface/40">
-      <div className="container-grid py-24 md:py-32">
+    <section id="demo" className="relative min-h-screen flex flex-col justify-center overflow-hidden border-b border-border/60">
+      {/* Background glow */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 grid-lines opacity-[0.12]" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-[radial-gradient(ellipse_at_center,hsl(88_95%_58%/0.10),transparent_65%)]" />
+        <div className="absolute bottom-0 right-0 w-[600px] h-[400px] bg-[radial-gradient(ellipse_at_bottom-right,hsl(142_70%_35%/0.12),transparent_60%)]" />
+      </div>
 
-        {/* Header */}
-        <div className="grid md:grid-cols-12 gap-10 mb-16">
-          <div className="md:col-span-5">
-            <p className="label-mono mb-4">005 / Live Demo</p>
-            <h2 className="display-serif text-5xl md:text-6xl leading-[0.95] tracking-tight">
-              Try it now.<br />
-              <span className="text-primary">On Bradbury.</span>
-            </h2>
+      <div className="container-grid py-16 md:py-20 w-full">
+
+        {/* Top meta row */}
+        <div className="flex flex-wrap items-center gap-6 mb-12 float-in">
+          <div className="flex items-center gap-2">
+            <span className="live-dot inline-block h-2 w-2 rounded-full bg-primary" />
+            <span className="label-mono text-foreground/80">Bradbury Testnet · Live</span>
           </div>
-          <div className="md:col-span-6 md:col-start-7 self-end">
-            <p className="text-muted-foreground text-pretty leading-relaxed text-lg">
-              Connect MetaMask, pick a fixture, click Fetch. A real transaction lands on
-              Bradbury Testnet — the result appears instantly via the oracle layer.
-            </p>
-          </div>
+          <div className="hidden sm:block h-3 w-px bg-border" />
+          <span className="label-mono">Chain ID 4221</span>
+          <div className="hidden sm:block h-3 w-px bg-border" />
+          <span className="label-mono">ESPN · Jolpica Oracle</span>
         </div>
 
-        {/* Card */}
-        <div className="relative">
-          <div className="absolute -inset-px bg-gradient-to-br from-primary/20 via-transparent to-pitch/20 blur-lg opacity-50 rounded-sm" />
-          <div className="relative bg-surface-elevated border border-border rounded-sm overflow-hidden">
+        {/* Headline */}
+        <div className="mb-12 float-in" style={{ animationDelay: "0.08s" }}>
+          <h1 className="text-balance leading-[0.95] tracking-tighter text-[clamp(2.8rem,6vw,5.5rem)] font-light">
+            <span className="display-serif italic text-muted-foreground">The </span>
+            <span className="font-display font-medium">match result,</span>{" "}
+            <span className="text-primary glow-text">on-chain</span>
+            <span className="display-serif italic text-muted-foreground">.</span>
+          </h1>
+          <p className="mt-5 max-w-lg text-lg text-muted-foreground leading-relaxed">
+            Pick a fixture, sign once in MetaMask — the result lands on Bradbury instantly.
+          </p>
+        </div>
 
-            {/* Top bar */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-background/40">
-              <div className="flex gap-1">
+        {/* Main tool card */}
+        <div className="relative float-in" style={{ animationDelay: "0.18s" }}>
+          <div className="absolute -inset-px bg-gradient-to-br from-primary/25 via-transparent to-pitch/25 blur-xl opacity-60 rounded-sm" />
+          <div className="relative bg-surface-elevated border border-border rounded-sm overflow-hidden shadow-[var(--shadow-card)]">
+
+            {/* Top bar — sport tabs + wallet */}
+            <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-background/50 flex-wrap gap-3">
+              <div className="flex gap-1 flex-wrap">
                 {(["football","basketball","f1","tennis"] as Sport[]).map(s => (
                   <button
                     key={s}
                     onClick={() => { setActiveSport(s); setResult(null); setTxHash(null); setTxError(null); }}
-                    className={`px-3 py-1.5 rounded-sm font-mono text-xs uppercase tracking-wider transition-colors ${
+                    className={`px-3 py-1.5 rounded-sm font-mono text-xs uppercase tracking-wider transition-all ${
                       activeSport === s
-                        ? "bg-primary/15 text-primary border border-primary/30"
-                        : "text-muted-foreground hover:text-foreground"
+                        ? "bg-primary/15 text-primary border border-primary/40 shadow-[0_0_12px_hsl(88_95%_58%/0.15)]"
+                        : "text-muted-foreground hover:text-foreground border border-transparent"
                     }`}
                   >
-                    {s === "football" ? "⚽" : s === "basketball" ? "🏀" : s === "f1" ? "🏎" : "🎾"} {s}
+                    {s === "football" ? "⚽" : s === "basketball" ? "🏀" : s === "f1" ? "🏎" : "🎾"}&nbsp;{s}
                   </button>
                 ))}
               </div>
 
-              {/* Wallet button */}
               {wallet ? (
                 <button
                   onClick={() => setWallet(null)}
@@ -257,30 +271,30 @@ const LiveDemo = () => {
               ) : (
                 <button
                   onClick={connectWallet}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-sm border border-border text-muted-foreground font-mono text-xs hover:border-primary/40 hover:text-primary transition-colors"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-sm border border-border text-muted-foreground font-mono text-xs hover:border-primary/50 hover:text-primary transition-colors"
                 >
                   🔗 Connect Wallet
                 </button>
               )}
             </div>
 
-            {/* Body */}
-            <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-border">
+            {/* Body — 2 columns */}
+            <div className="grid lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-border">
 
-              {/* Inputs */}
-              <div className="p-6 space-y-4">
+              {/* Left: inputs */}
+              <div className="p-6 md:p-8 space-y-4">
                 {activeSport === "football" && (
                   <>
                     <Field label="Team 1" value={fb.team1} onChange={v => setFb(p => ({...p, team1: v}))} />
                     <Field label="Team 2" value={fb.team2} onChange={v => setFb(p => ({...p, team2: v}))} />
-                    <Field label="Date (YYYY-MM-DD)" value={fb.date} onChange={v => setFb(p => ({...p, date: v}))} />
+                    <Field label="Match Date (YYYY-MM-DD)" value={fb.date} onChange={v => setFb(p => ({...p, date: v}))} />
                   </>
                 )}
                 {activeSport === "basketball" && (
                   <>
                     <Field label="Team 1" value={bb.team1} onChange={v => setBb(p => ({...p, team1: v}))} />
                     <Field label="Team 2" value={bb.team2} onChange={v => setBb(p => ({...p, team2: v}))} />
-                    <Field label="Date (YYYY-MM-DD)" value={bb.date} onChange={v => setBb(p => ({...p, date: v}))} />
+                    <Field label="Game Date (YYYY-MM-DD)" value={bb.date} onChange={v => setBb(p => ({...p, date: v}))} />
                   </>
                 )}
                 {activeSport === "f1" && (
@@ -300,61 +314,71 @@ const LiveDemo = () => {
                 <button
                   onClick={handleFetch}
                   disabled={loading}
-                  className="w-full mt-2 py-3 bg-primary text-primary-foreground font-display font-semibold text-sm rounded-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full mt-2 py-3.5 bg-primary text-primary-foreground font-display font-semibold text-sm rounded-sm hover:opacity-90 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading
-                    ? txStatus === "signing" ? "⏳ Sign in MetaMask…" : "⚡ Fetching result…"
+                    ? (txStatus === "signing" ? "⏳ Sign in MetaMask…" : "⚡ Fetching result…")
                     : "Fetch Result →"}
                 </button>
 
                 {/* TX status */}
                 {txStatus === "submitted" && txHash && (
-                  <div className="flex items-center gap-2 p-3 bg-primary/5 border border-primary/20 rounded-sm">
-                    <span className="text-primary text-xs">✅</span>
-                    <div className="font-mono text-xs text-muted-foreground">
+                  <div className="flex items-start gap-2.5 p-3 bg-primary/5 border border-primary/20 rounded-sm">
+                    <span className="text-primary text-xs mt-0.5">✅</span>
+                    <div className="font-mono text-xs text-muted-foreground leading-relaxed">
                       TX on Bradbury ·{" "}
-                      <a
-                        href={`${EXPLORER}${txHash}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-primary hover:underline"
-                      >
-                        {txHash.slice(0, 14)}…
+                      <a href={`${EXPLORER}${txHash}`} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                        {txHash.slice(0, 16)}…
                       </a>
                     </div>
                   </div>
                 )}
-                {txStatus === "error" && txError && (
+                {(txStatus === "error") && txError && (
                   <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-sm font-mono text-xs text-destructive/80">
                     ⚠ {txError}
                   </div>
                 )}
               </div>
 
-              {/* Result */}
-              <div className="p-6 flex flex-col justify-center min-h-[260px]">
+              {/* Right: result */}
+              <div className="p-6 md:p-8 flex flex-col justify-center min-h-[280px] lg:min-h-[360px]">
                 {result ? (
                   <ResultDisplay result={result} sport={activeSport} />
                 ) : (
-                  <div className="text-center text-muted-foreground font-mono text-xs">
-                    {loading
-                      ? <span className="animate-pulse">Querying oracle layer…</span>
-                      : <>Fill the fields and click <span className="text-primary">Fetch Result →</span></>
-                    }
+                  <div className="text-center space-y-3">
+                    <div className="display-serif text-7xl text-border leading-none select-none">—</div>
+                    <p className="font-mono text-xs text-muted-foreground">
+                      {loading
+                        ? <span className="animate-pulse text-primary">Querying oracle layer…</span>
+                        : <>Fill the fields and click <span className="text-primary">Fetch Result →</span></>
+                      }
+                    </p>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Footer note */}
-            <div className="px-6 py-3 border-t border-border bg-background/20 flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+            {/* Bottom bar */}
+            <div className="px-5 py-2.5 border-t border-border bg-background/30 flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">
+                  Bradbury Testnet · Chain ID 4221
+                </span>
+              </div>
               <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">
-                Bradbury Testnet · Chain ID 4221 · Results via ESPN / Jolpica oracle
+                Contract: 0x5d5d…8855
               </span>
             </div>
           </div>
         </div>
+
+        {/* Scroll hint */}
+        <div className="mt-10 flex items-center gap-3 text-muted-foreground float-in" style={{ animationDelay: "0.3s" }}>
+          <div className="hairline flex-1 max-w-[60px]" />
+          <span className="label-mono">Scroll to learn more ↓</span>
+        </div>
+
       </div>
     </section>
   );

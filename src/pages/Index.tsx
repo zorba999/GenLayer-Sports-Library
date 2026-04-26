@@ -25,12 +25,12 @@ const Index = () => {
   return (
     <main className="min-h-screen bg-background text-foreground">
       <Nav />
+      <LiveDemo />
       <Hero />
       <Sports />
       <Stats />
       <HowItWorks />
       <CodeShowcase />
-      <LiveDemo />
       <CTA />
       <Footer />
     </main>
