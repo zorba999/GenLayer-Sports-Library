@@ -1,5 +1,6 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { ethers } from "ethers";
+import { useWallet } from "@/context/WalletContext";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const RPC = "https://rpc-bradbury.genlayer.com";
@@ -80,8 +81,8 @@ type TxStatus = "idle" | "signing" | "submitted" | "error";
 
 // ── Main component ────────────────────────────────────────────────────────────
 const LiveDemo = () => {
+  const { wallet, connectWallet } = useWallet();
   const [activeSport, setActiveSport] = useState<Sport>("football");
-  const [wallet, setWallet] = useState<{ signer: ethers.Signer; address: string } | null>(null);
   const [txStatus, setTxStatus] = useState<TxStatus>("idle");
   const [txHash, setTxHash] = useState<string | null>(null);
   const [txError, setTxError] = useState<string | null>(null);
@@ -93,28 +94,6 @@ const LiveDemo = () => {
   const [bb, setBb] = useState({ team1: "Lakers", team2: "Timberwolves", date: "2025-04-27" });
   const [f1, setF1] = useState({ race: "Monaco Grand Prix", year: "2025" });
   const [tn, setTn] = useState({ player1: "Carlos Alcaraz", player2: "Novak Djokovic", tournament: "Roland Garros 2025" });
-
-  // ── Wallet ──────────────────────────────────────────────────────────────────
-  async function connectWallet() {
-    const eth = (window as unknown as { ethereum?: ethers.Eip1193Provider }).ethereum;
-    if (!eth) { alert("MetaMask not found. Please install MetaMask."); return; }
-    try {
-      await eth.request({ method: "eth_requestAccounts" });
-      try {
-        await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: BRADBURY_CHAIN.chainId }] });
-      } catch (e: unknown) {
-        if ((e as { code?: number }).code === 4902) {
-          await eth.request({ method: "wallet_addEthereumChain", params: [BRADBURY_CHAIN] });
-        } else throw e;
-      }
-      const provider = new ethers.BrowserProvider(eth);
-      const signer = await provider.getSigner();
-      const address = await signer.getAddress();
-      setWallet({ signer, address });
-    } catch (e: unknown) {
-      if ((e as { code?: number }).code !== 4001) console.error(e);
-    }
-  }
 
   // ── Submit TX ────────────────────────────────────────────────────────────────
   async function submitTx(method: string, args: unknown[]) {
@@ -147,19 +126,10 @@ const LiveDemo = () => {
     setResult(null); setTxHash(null); setTxError(null); setLoading(true);
 
     // Connect wallet if needed
-    let w = wallet;
-    if (!w) {
+    if (!wallet) {
       await connectWallet();
-      // wallet state updates async; grab signer fresh
-      const eth = (window as unknown as { ethereum?: ethers.Eip1193Provider }).ethereum;
-      if (!eth) { setLoading(false); return; }
-      try {
-        const provider = new ethers.BrowserProvider(eth);
-        const signer = await provider.getSigner();
-        const address = await signer.getAddress();
-        w = { signer, address };
-        setWallet(w);
-      } catch { setLoading(false); return; }
+      // If still not connected after prompt, abort
+      if (!wallet) { setLoading(false); return; }
     }
 
     // Submit TX
@@ -242,8 +212,8 @@ const LiveDemo = () => {
           <div className="absolute -inset-px bg-gradient-to-br from-primary/25 via-transparent to-pitch/25 blur-xl opacity-60 rounded-sm" />
           <div className="relative bg-surface-elevated border border-border rounded-sm overflow-hidden shadow-[var(--shadow-card)]">
 
-            {/* Top bar — sport tabs + wallet */}
-            <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-background/50 flex-wrap gap-3">
+            {/* Top bar — sport tabs only (wallet is in Nav) */}
+            <div className="flex items-center px-5 py-3 border-b border-border bg-background/50 flex-wrap gap-3">
               <div className="flex gap-1 flex-wrap">
                 {(["football","basketball","f1","tennis"] as Sport[]).map(s => (
                   <button
@@ -259,23 +229,6 @@ const LiveDemo = () => {
                   </button>
                 ))}
               </div>
-
-              {wallet ? (
-                <button
-                  onClick={() => setWallet(null)}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-sm border border-primary/40 bg-primary/10 text-primary font-mono text-xs hover:bg-primary/20 transition-colors"
-                >
-                  <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                  {short(wallet.address)}
-                </button>
-              ) : (
-                <button
-                  onClick={connectWallet}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-sm border border-border text-muted-foreground font-mono text-xs hover:border-primary/50 hover:text-primary transition-colors"
-                >
-                  🔗 Connect Wallet
-                </button>
-              )}
             </div>
 
             {/* Body — 2 columns */}
