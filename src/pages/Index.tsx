@@ -5,7 +5,6 @@ import HowItWorks from "@/components/sports/HowItWorks";
 import CodeShowcase from "@/components/sports/CodeShowcase";
 import Stats from "@/components/sports/Stats";
 import LiveDemo from "@/components/sports/LiveDemo";
-import CTA from "@/components/sports/CTA";
 import Footer from "@/components/sports/Footer";
 import { useEffect } from "react";
 
@@ -31,7 +30,6 @@ const Index = () => {
       <Stats />
       <HowItWorks />
       <CodeShowcase />
-      <CTA />
       <Footer />
     </main>
   );

@@ -23,7 +23,6 @@ const Nav = () => {
           <a href="#sports" className="hover:text-foreground transition-colors">Sports</a>
           <a href="#how" className="hover:text-foreground transition-colors">How it works</a>
           <a href="#api" className="hover:text-foreground transition-colors">API</a>
-          <a href="#install" className="hover:text-foreground transition-colors">Install</a>
         </nav>
 
         {/* Wallet button */}
