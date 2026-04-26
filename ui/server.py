@@ -183,7 +183,7 @@ def get_tennis_result(player1, player2, tournament):
 # ──────────────────────────────────────────────────────────────────
 # HTTP Server
 # ──────────────────────────────────────────────────────────────────
-UI_DIR = os.path.join(os.path.dirname(__file__))
+UI_DIR = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'dist'))
 
 class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):

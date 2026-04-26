@@ -1,0 +1,162 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Instrument+Serif&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* GenLayer Sports Library — Stadium x On-chain Editorial design system.
+   All colors HSL. Define everything once. No ad-hoc colors in components. */
+
+@layer base {
+  :root {
+    /* Core palette */
+    --background: 220 30% 5%;            /* almost-black navy */
+    --foreground: 60 14% 94%;            /* warm bone */
+
+    --surface: 220 28% 7%;
+    --surface-elevated: 220 24% 10%;
+
+    --card: 220 28% 7%;
+    --card-foreground: 60 14% 94%;
+
+    --popover: 220 28% 8%;
+    --popover-foreground: 60 14% 94%;
+
+    /* Primary = pitch green / electric chartreuse */
+    --primary: 88 95% 58%;               /* electric lime */
+    --primary-foreground: 220 40% 6%;
+
+    --pitch: 142 70% 35%;                /* deep emerald */
+    --pitch-glow: 130 90% 55%;
+
+    --secondary: 220 20% 14%;
+    --secondary-foreground: 60 10% 88%;
+
+    --muted: 220 18% 12%;
+    --muted-foreground: 220 8% 60%;
+
+    --accent: 18 92% 60%;                /* signal orange (penalty) */
+    --accent-foreground: 220 40% 6%;
+
+    --destructive: 0 80% 58%;
+    --destructive-foreground: 60 14% 94%;
+
+    --border: 220 18% 16%;
+    --input: 220 18% 14%;
+    --ring: 88 95% 58%;
+
+    --radius: 0.25rem;
+
+    /* Gradients */
+    --gradient-pitch: linear-gradient(180deg, hsl(142 60% 18% / 0.0) 0%, hsl(142 70% 25% / 0.4) 50%, hsl(220 30% 5%) 100%);
+    --gradient-glow: radial-gradient(ellipse at center, hsl(88 95% 58% / 0.18) 0%, transparent 60%);
+    --gradient-line: linear-gradient(90deg, transparent, hsl(60 14% 94% / 0.25), transparent);
+
+    /* Shadows */
+    --shadow-glow: 0 0 60px hsl(88 95% 58% / 0.25), 0 0 120px hsl(130 90% 55% / 0.1);
+    --shadow-card: 0 1px 0 hsl(60 14% 94% / 0.04) inset, 0 30px 60px -30px hsl(0 0% 0% / 0.6);
+
+    /* Type */
+    --font-display: 'Space Grotesk', system-ui, sans-serif;
+    --font-serif: 'Instrument Serif', Georgia, serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+    /* Motion */
+    --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-display);
+    font-feature-settings: "ss01", "ss02", "cv11";
+    background-image:
+      radial-gradient(1200px 600px at 80% -10%, hsl(142 70% 18% / 0.35), transparent 60%),
+      radial-gradient(900px 500px at 0% 100%, hsl(88 95% 30% / 0.12), transparent 60%);
+    background-attachment: fixed;
+  }
+
+  ::selection { background: hsl(var(--primary) / 0.85); color: hsl(var(--primary-foreground)); }
+}
+
+@layer components {
+  .container-grid {
+    @apply mx-auto w-full max-w-[1320px] px-6 md:px-10;
+  }
+
+  .hairline {
+    background: var(--gradient-line);
+    height: 1px;
+  }
+
+  .label-mono {
+    font-family: var(--font-mono);
+    @apply text-[11px] uppercase tracking-[0.18em] text-muted-foreground;
+  }
+
+  .display-serif {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+  }
+
+  .grid-lines {
+    background-image:
+      linear-gradient(hsl(var(--border)) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px);
+    background-size: 64px 64px;
+    background-position: -1px -1px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+  }
+
+  .pitch-stripe {
+    background: repeating-linear-gradient(
+      90deg,
+      hsl(142 60% 18% / 0.0) 0,
+      hsl(142 60% 18% / 0.0) 48px,
+      hsl(142 60% 22% / 0.35) 48px,
+      hsl(142 60% 22% / 0.35) 96px
+    );
+  }
+
+  .glow-text {
+    text-shadow: 0 0 40px hsl(var(--primary) / 0.35);
+  }
+
+  .ticker {
+    animation: ticker 40s linear infinite;
+  }
+}
+
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+  .text-pretty { text-wrap: pretty; }
+}
+
+@keyframes ticker {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 hsl(var(--primary) / 0.6); }
+  50% { opacity: 0.7; box-shadow: 0 0 0 8px hsl(var(--primary) / 0); }
+}
+
+.live-dot {
+  animation: pulse-dot 1.6s var(--ease-out-soft) infinite;
+}
+
+@keyframes float-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.float-in {
+  animation: float-up 0.9s var(--ease-out-soft) both;
+}
