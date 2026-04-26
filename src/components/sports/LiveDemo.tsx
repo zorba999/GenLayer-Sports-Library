@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { ethers } from "ethers";
 import { useWallet } from "@/context/WalletContext";
+import {
+  getFootballResult, getBasketballResult, getF1RaceWinner, getTennisResult,
+  type SportResult
+} from "@/lib/sports-api";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const RPC = "https://rpc-bradbury.genlayer.com";
@@ -76,7 +80,7 @@ function glSerialize(obj: unknown): string {
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Sport = "football" | "basketball" | "f1" | "tennis";
-type Result = { winner?: number | string; score?: string; sets?: string; team?: string; status: string };
+type Result = SportResult;
 type TxStatus = "idle" | "signing" | "submitted" | "error";
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -113,26 +117,28 @@ const LiveDemo = () => {
     return tx.hash;
   }
 
-  // ── Local API ────────────────────────────────────────────────────────────────
-  async function fetchResult(endpoint: string, params: Record<string, string>) {
-    const qs = new URLSearchParams(params).toString();
-    const r = await fetch(`/api/${endpoint}?${qs}`);
-    if (!r.ok) throw new Error(`API ${r.status}`);
-    return r.json() as Promise<Result>;
+  // ── Direct sports API (works on Vercel — no proxy needed) ───────────────────
+  async function fetchSportResult(): Promise<Result> {
+    if (activeSport === "football")
+      return getFootballResult(fb.team1, fb.team2, fb.date);
+    if (activeSport === "basketball")
+      return getBasketballResult(bb.team1, bb.team2, bb.date);
+    if (activeSport === "f1")
+      return getF1RaceWinner(f1.race, parseInt(f1.year));
+    return getTennisResult(tn.player1, tn.player2, tn.tournament);
   }
 
   // ── Run ──────────────────────────────────────────────────────────────────────
-  async function run(method: string, args: unknown[], endpoint: string, params: Record<string, string>) {
+  async function run(method: string, args: unknown[]) {
     setResult(null); setTxHash(null); setTxError(null); setLoading(true);
 
     // Connect wallet if needed
     if (!wallet) {
       await connectWallet();
-      // If still not connected after prompt, abort
       if (!wallet) { setLoading(false); return; }
     }
 
-    // Submit TX
+    // Submit TX to Bradbury (fire & forget — don't wait for validators)
     setTxStatus("signing");
     try {
       const hash = await submitTx(method, args);
@@ -147,9 +153,9 @@ const LiveDemo = () => {
       setTxStatus("error");
     }
 
-    // Fetch result instantly
+    // Fetch result instantly — direct ESPN/Jolpica call
     try {
-      const res = await fetchResult(endpoint, params);
+      const res = await fetchSportResult();
       setResult(res);
     } catch (e: unknown) {
       setTxError((e as Error).message);
@@ -158,15 +164,14 @@ const LiveDemo = () => {
   }
 
   function handleFetch() {
-    if (activeSport === "football") {
-      run("check_football", [fb.team1, fb.team2, fb.date], "football", { team1: fb.team1, team2: fb.team2, date: fb.date });
-    } else if (activeSport === "basketball") {
-      run("check_basketball", [bb.team1, bb.team2, bb.date], "basketball", { team1: bb.team1, team2: bb.team2, date: bb.date });
-    } else if (activeSport === "f1") {
-      run("check_f1", [f1.race, parseInt(f1.year)], "f1", { race: f1.race, year: f1.year });
-    } else {
-      run("check_tennis", [tn.player1, tn.player2, tn.tournament], "tennis", { player1: tn.player1, player2: tn.player2, tournament: tn.tournament });
-    }
+    if (activeSport === "football")
+      run("check_football", [fb.team1, fb.team2, fb.date]);
+    else if (activeSport === "basketball")
+      run("check_basketball", [bb.team1, bb.team2, bb.date]);
+    else if (activeSport === "f1")
+      run("check_f1", [f1.race, parseInt(f1.year)]);
+    else
+      run("check_tennis", [tn.player1, tn.player2, tn.tournament]);
   }
 
   const short = (addr: string) => `${addr.slice(0, 6)}…${addr.slice(-4)}`;
