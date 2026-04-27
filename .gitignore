@@ -1,3 +1,6 @@
+# Claude Code local settings — never push
+.claude/
+
 # Private keys / keystores — NEVER commit
 tmp_key.json
 *.key
